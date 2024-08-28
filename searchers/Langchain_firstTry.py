@@ -1,6 +1,4 @@
 import weaviate
-from weaviate.classes.init import Auth
-import weaviate.classes as wvc
 
 from langchain_community.retrievers import (
     WeaviateHybridSearchRetriever,
@@ -16,6 +14,8 @@ dotenv.load_dotenv()
 URL = os.getenv('WEAVIATE_URL')
 APIKEY = os.getenv('WEAVIATE_API')
 OPENAI_API_KEY = os.getenv('OPENAI_API')
+
+cohere_api_key = os.getenv('COHERE_API')
 
 
 client = weaviate.Client(
