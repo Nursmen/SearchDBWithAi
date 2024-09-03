@@ -18,10 +18,10 @@ router = APIRouter()
 dotenv.load_dotenv()
 
 URL = os.getenv('WEAVIATE_URL')
-APIKEY = os.getenv('WEAVIATE_API')
-OPENAI_API_KEY = os.getenv('OPENAI_API')
+APIKEY = os.getenv('WEAVIATE_API_KEY')
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
-cohere_api_key = os.getenv('COHERE_API')
+cohere_api_key = os.getenv('COHERE_API_KEY')
 
 client = weaviate.Client(
     url=URL,

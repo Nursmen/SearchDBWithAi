@@ -9,13 +9,13 @@ dotenv.load_dotenv()
 openai_client = OpenAI()
 composio_toolset = ComposioToolSet(entity_id="Jessica")
 
-tools = composio_toolset.get_tools(apps=[App.GITHUB])
+tools = composio_toolset.get_tools(apps=[App.GOOGLECALENDAR])
 
 print()
 print(tools)
 print()
 
-task = "Star the repo composiohq/composio on GitHub"
+task = "Create an event for today"
 
 response = openai_client.chat.completions.create(
 model="gpt-4-turbo-preview",
