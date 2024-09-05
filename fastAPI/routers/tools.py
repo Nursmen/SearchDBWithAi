@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from typing import Union, List, Optional
 
 from .unstrToStr import unstructerToStr
-from .read_file import read_pdf, read_csv, read_txt
+from .read_file import read_pdf, read_csv, read_txt, read_html, read_excel, read_json, read_xml, read_docx, read_pptx, read_markdown
 
 from firecrawl import FirecrawlApp
 
@@ -80,6 +80,22 @@ async def read(read: UploadFile = File(...)):
             content = read_csv(file_path)
         elif fileType == 'txt':
             content = read_txt(file_path)
+        elif fileType == 'html':
+            content = read_html(file_path)
+        elif fileType == 'excel':
+            content = read_excel(file_path)
+        elif fileType == 'json':
+            content = read_json(file_path)
+        elif fileType == 'xml':
+            content = read_xml(file_path)
+        elif fileType == 'docx':
+            content = read_docx(file_path)
+        elif fileType == 'pptx':
+            content = read_pptx(file_path)
+        elif fileType == 'md':
+            content = read_markdown(file_path)
+        elif fileType == 'xlsx':
+            content = read_excel(file_path)
         else:
             raise HTTPException(status_code=400, detail="Unsupported read type")
     finally:
