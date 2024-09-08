@@ -99,6 +99,7 @@ if prompt := st.chat_input(placeholder="Start argue."):
         tools=tools,
         verbose=True,
         memory=memory,
+        seed=0
     )
 
 

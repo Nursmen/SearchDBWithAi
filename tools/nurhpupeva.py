@@ -31,7 +31,6 @@ todo = """
 """
 
 
-# Create and Execute Agent.
 def run_crew():
     calendar_agent = Agent(
         role="Google Calendar Agent",
@@ -50,7 +49,7 @@ def run_crew():
     )
     crew = Crew(agents=[calendar_agent], tasks=[task])
     result = crew.kickoff()
-    print(result)
+    print("Result is : ", result)
     return "Crew run initiated", 200
 
 
