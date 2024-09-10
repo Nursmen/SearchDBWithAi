@@ -11,6 +11,7 @@ from langchain.callbacks.base import BaseCallbackHandler
 from composio_crewai import App, ComposioToolSet, Action
 from crewai import Agent, Task, Crew
 from searcherTool import tool_searcher
+from integrations import add_integration, check_integration
 import pandas as pd
 import re
 
@@ -122,35 +123,14 @@ if 'first' not in st.session_state:
     Tool_names = pd.read_csv('./tools/tools.csv')['tool'].to_numpy()
     Tool_names = ', '.join(Tool_names)
 
-    # prompt = """
-    # You have access to the following apps:
-    # {App_names}
-
-    # When given a command, your tasks are:
-    # 1. Simplify or divide the command into smaller, executable tasks for a smaller model.
-    # 2. Infer the tools needed based on the command's requirements, specifying which app each tool is likely from. Remember, you only know the app names, not the specific tools, so infer which tools may be needed.
-    
-    # Example Input:
-    # Add all my GitHub repositories to the Google Sheet.
-
-    # Output format:
-
-    # {{\n
-    # \n    "command": "Extract all repositories from GitHub and add them to a new Google Sheet",
-    # \n    "tools": ["GOOGLESHEET", "GITHUB_LIST_REPOSITORIES"]
-    # \n}}
-
-    # Do you understand the task?
-    # """.format(App_names=App_names, Tool_names=Tool_names)
-
     prompt = """
-    You have 4 tools: GOOGLECALENDAR_CREATE_AN_EVENT, GITHUB_LIST_REPOSITORIES, GOOGLECALENDAR_LIST_EVENTS, GOOGLECALENDAR_FIND_AVAILABILITY.
-    
+    You have 4 tools: GOOGLECALENDAR_CREATE_AN_EVENT, KLAVIYO_GET_COUPON, SLACK_LIST_APPROVED_APPS_FOR_ORG_OR_WORKSPACE, NOTION_CREATE_NOTION_PAGE.
+
     You should tell what tools another model should use to acomplish the task. When you return a tool name I will give that tool to another model. Just write what of 4 tools above fits the task best.
     Also rewrite humans command into your answer.
 
     When you get any input, just return one of 4 tools we gave you. Say yes if you understood?
-    
+
     How it should work? 
 
     Input: List me all the repositories.
@@ -165,7 +145,7 @@ if 'first' not in st.session_state:
 
     llm = ChatOpenAI(model_name="gpt-3.5-turbo", openai_api_key=openai_api_key, streaming=True)
     tools = []
-    chat_agent = ConversationalChatAgent.from_llm_and_tools(llm=llm, tools=tools)
+    chat_agent = ConversationalChatAgent.from_llm_and_tools(llm=llm, tools=tools) 
     executor = AgentExecutor.from_agent_and_tools(
         agent=chat_agent,
         tools=tools,
@@ -196,7 +176,7 @@ tools_needed = []
 
 # Handle input
 
-if prompt := st.chat_input(placeholder="Who won the Women's U.S. Open in 2018?"):
+if prompt := st.chat_input(placeholder="Ask bot to do something..."):
     st.chat_message("user").write(prompt)
 
     if not openai_api_key:
@@ -248,28 +228,56 @@ if prompt := st.chat_input(placeholder="Who won the Women's U.S. Open in 2018?")
     #   Ask user if he is good with the tools
     #   And if he is we run those tools
 
-        if "yes" in prompt.lower():
+        if "yes" in prompt.lower() or 'ready' in prompt.lower():
+
             composio_toolset = ComposioToolSet()
-            tools = composio_toolset.get_tools(actions=[getattr(Action, tool) for tool in st.session_state.tools_needed])
 
-            prompt = """
-            You should use this tools:
-            """ + st.session_state.response + " to " + st.session_state.prompt
-
-            st.chat_message("user").write(prompt)
+ 
 
 
+            links = []
+            apps = []
+            for tool in st.session_state.tools_needed:
 
-            with st.chat_message("assistant"):
-                stream_handler = StreamHandler(st.empty())
-                response, code = run_crew(todo=prompt, tools = tools, date=DATE, timezone=TIMEZONE)
-                
-                if code == 200:
-                    st.write("Success! Now you can do something else!")
+                app = tool.split('_')[0].lower()
+                print(app)
+                print(check_integration(app))
 
-                else:
-                    st.write("Something went wrong. Please try again.")    
+                if check_integration(app) == False: 
+
+                    apps.append(app)
+                    links.append(add_integration(app))
+
+            if len(apps) == 0:
+                tools = composio_toolset.get_tools(actions=[getattr(Action, tool) for tool in st.session_state.tools_needed])
 
 
-        st.session_state.check = False
-    
+                prompt = """
+                You should use this tools:
+                """ + st.session_state.response + " to " + st.session_state.prompt
+
+                st.chat_message("user").write(prompt)
+
+
+
+                with st.chat_message("assistant"):
+                    stream_handler = StreamHandler(st.empty())
+                    response, code = run_crew(todo=prompt, tools = tools, date=DATE, timezone=TIMEZONE)
+                    
+                    if code == 200:
+                        st.write("Success! Now you can do something else!")
+
+                    else:
+                        st.write("Something went wrong. Please try again.")    
+
+                st.session_state.check = False
+
+            else:
+                st.write("Please go to the following links:")
+                for app, link in zip(apps, links):
+                    st.markdown(f"[{app}]({link})")
+
+                st.write("When you are ready, please type 'ready'")
+
+        else:
+            st.session_state.check = False

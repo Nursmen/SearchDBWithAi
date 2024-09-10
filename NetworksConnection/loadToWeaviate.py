@@ -39,4 +39,4 @@ retriever = WeaviateHybridSearchRetriever(
 
 retriever.add_documents(all_tools)
 
-print(retriever.invoke('googlecalendar'))
+print(retriever.invoke('create event at google calendar'))

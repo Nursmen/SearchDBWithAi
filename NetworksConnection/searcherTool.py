@@ -43,10 +43,10 @@ def tool_searcher(query: str):
     """
     firstFilter = [ff.page_content for ff in retriever.invoke(query)]
 
-    results = co.rerank(model="rerank-english-v3.0", query=query, documents=firstFilter, top_n=1, return_documents=True)
+    results = co.rerank(model="rerank-english-v3.0", query=query, documents=firstFilter, top_n=10, return_documents=True)
 
-    return results.results[0].document.text
+    return results.results
 
 if __name__ == "__main__":
-    print(tool_searcher("calendar"))
+    print(tool_searcher("Checks the availability of specified users in Google Calendar for a given time range"))
     
