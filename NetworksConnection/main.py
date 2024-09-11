@@ -12,6 +12,7 @@ from composio_crewai import App, ComposioToolSet, Action
 from crewai import Agent, Task, Crew
 from searcherTool import tool_searcher
 from integrations import add_integration, check_integration
+from login import login, logout, authentificate
 import pandas as pd
 import re
 
@@ -50,6 +51,20 @@ else:
 
 
 
+# Here is composio login
+
+logout()
+
+if "key" not in st.session_state:
+    st.session_state.url, st.session_state.key = login()
+st.sidebar.markdown(
+    f"""
+    Please go to
+    [this link]({st.session_state.url})
+    and pass us the secret code  
+    """
+)
+code = st.sidebar.text_input("secret code", type='password')
 
 
 # In this part of the code we run crewai to actually run tools 
@@ -117,24 +132,8 @@ for idx, msg in enumerate(msgs.messages):
 if 'first' not in st.session_state:
     st.session_state.first = True
 
-    App_names = ['APIFY', 'ASANA', 'ATTIO', 'BROWSERBASE_TOOL', 'BROWSER_TOOL', 'CLICKUP', 'CODEINTERPRETER', 'CODE_ANALYSIS_TOOL', 'CODE_FORMAT_TOOL', 'CODE_GREP_TOOL', 'CODE_INDEX_TOOL', 'CODE_MAP_TOOL', 'COMPOSIO', 'DISCORD', 'DISCORDBOT', 'DROPBOX', 'ELEVENLABS', 'EMBED_TOOL', 'EXA', 'FIGMA', 'FILETOOL', 'FIRECRAWL', 'GIT', 'GITHUB', 'GMAIL', 'GOOGLECALENDAR', 'GOOGLEDOCS', 'GOOGLEDRIVE', 'GOOGLEMEET', 'GOOGLESHEETS', 'GOOGLETASKS', 'GREPTILE', 'HACKERNEWS', 'HISTORY_FETCHER', 'HUBSPOT', 'IMAGE_ANALYSER', 'INDUCED_AI', 'JIRA', 'KLAVIYO', 'LINEAR', 'LISTENNOTES', 'MAILCHIMP', 'MATHEMATICAL', 'MULTIONAI', 'NASA', 'NOTION', 'PERPLEXITYAI', 'PIPEDRIVE', 'RAGTOOL', 'SCHEDULER', 'SERPAPI', 'SHELLTOOL', 'SLACK', 'SLACKBOT', 'SNOWFLAKE', 'SPIDERTOOL', 'SQLTOOL', 'TASKADE', 'TAVILY', 'TRELLO', 'TWITTER', 'TYPEFORM', 'WEATHERMAP', 'WEBTOOL', 'WORKSPACE_TOOL', 'YOUSEARCH', 'YOUTUBE', 'ZENDESK', 'ZEPTOOL']
-    App_names = ', '.join(App_names)
-
-    Tool_names = pd.read_csv('./tools/tools.csv')['tool'].to_numpy()
-    Tool_names = ', '.join(Tool_names)
-
     prompt = """
-    You have 4 tools: GOOGLECALENDAR_CREATE_AN_EVENT, KLAVIYO_GET_COUPON, SLACK_LIST_APPROVED_APPS_FOR_ORG_OR_WORKSPACE, NOTION_CREATE_NOTION_PAGE.
-
-    You should tell what tools another model should use to acomplish the task. When you return a tool name I will give that tool to another model. Just write what of 4 tools above fits the task best.
-    Also rewrite humans command into your answer.
-
-    When you get any input, just return one of 4 tools we gave you. Say yes if you understood?
-
-    How it should work? 
-
-    Input: List me all the repositories.
-    \n Output: GITHUB_LIST_REPOSITORIES
+    You should just repeat what I say to you
     """
 
     st.chat_message("user").write(prompt)
@@ -143,8 +142,8 @@ if 'first' not in st.session_state:
         st.info("Please add your OpenAI API key to continue.")
         st.stop()
 
-    llm = ChatOpenAI(model_name="gpt-3.5-turbo", openai_api_key=openai_api_key, streaming=True)
-    tools = []
+    llm = ChatOpenAI(model_name="gpt-4o", openai_api_key=openai_api_key, streaming=True)
+    tools = [tool_searcher]
     chat_agent = ConversationalChatAgent.from_llm_and_tools(llm=llm, tools=tools) 
     executor = AgentExecutor.from_agent_and_tools(
         agent=chat_agent,
@@ -183,6 +182,10 @@ if prompt := st.chat_input(placeholder="Ask bot to do something..."):
         st.info("Please add your OpenAI API key to continue.")
         st.stop()
 
+    if not authentificate(code, st.session_state.key):
+        st.info("Please add your Composio code to continue.")
+        st.stop()
+
 
     # When we try to get right response
 
@@ -208,18 +211,18 @@ if prompt := st.chat_input(placeholder="Ask bot to do something..."):
 
         st.session_state.response = response['output']
 
-        tools_needed = re.findall(r'\b[A-Z_]+\b', response["output"])
-        tools_needed = [tool_searcher.invoke(tool) for tool in tools_needed if len(tool) > 5]
+        tools_needed = response['output'].split('\n')
+        tools_needed = [tool_searcher.invoke(tool) for tool in tools_needed]
 
         st.session_state.tools_needed = tools_needed
         st.session_state.prompt = prompt
     
-        if len(tools_needed) > 0:
-            st.session_state.check = True
+        # if len(tools_needed) > 0:
+        st.session_state.check = True
 
-            st.write("Are you good with these results?")
-        else:
-            st.write("Please provide more info")
+        st.write("Are you good with these results?")
+        # else:
+        #     st.write("Please provide more info")
 
     else:
 
@@ -254,7 +257,7 @@ if prompt := st.chat_input(placeholder="Ask bot to do something..."):
 
                 prompt = """
                 You should use this tools:
-                """ + st.session_state.response + " to " + st.session_state.prompt
+                """ + ", ".join(st.session_state.tools_needed) + " to " + st.session_state.prompt
 
                 st.chat_message("user").write(prompt)
 

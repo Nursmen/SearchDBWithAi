@@ -1,0 +1,48 @@
+Name,Description,API,Format Output,Cost,Get key,UI type,Response,
+Searcher,Search tool. It provides internet search results,https://api.tavily.com/search,"{
+    ""api_key"": ""tvly-YOUR_API_KEY"",
+    ""query"": ""-"",
+    ""search_depth"": ""basic"",
+    ""include_answer"": false,
+    ""include_images"": true,
+    ""include_raw_content"": false,
+    ""max_results"": 5,
+    ""include_domains"": [],
+    ""exclude_domains"": []
+}",free/100$/220$,https://app.tavily.com/home,Text,,
+Scraper,Scraper automatically extracts data from websites.,https://api.firecrawl.dev,"Header: Authorization: Bearer fc-123456789
+{
+    ""url"": ""-""
+}",$16,https://www.firecrawl.dev/app/api-keys,Text,,
+Crawler,Crawler systematically browses the internet to index and retrieve information from websites,https://api.firecrawl.dev,"Header: Authorization: Bearer fc-123456789
+{
+    ""url"": ""-""
+}",$16,https://www.firecrawl.dev/app/api-keys,Text,,
+Execute code,Code executer run code snippets or entire programs on a remote server,https://api.riza.io/v1/execute,"Header: Authorization: Bearer fc-123456789
+{
+    ""language"": ""-"",
+    ""code"":""-""
+}",self-hosting,https://dashboard.riza.io/,Text,, 
+Image to text,Image to text can analyze an image and generate a detailed textual description of its content.,https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large,Binary: image,$0,https://huggingface.co/settings/tokens,Text,,
+Curracy Converter,Curracy Converter allows you to convert one currency into another,https://api.apilayer.com/fixer/convert,Parameters: to= from= amount=,$0 until 100 than 15$,https://apilayer.com/marketplace/fixer-api#documentation-tab,Text,,
+Weather,Weather lets you get whether in a specific area at a particular time ,http://api.weatherstack.com/current,Parameters: access_key= query=,0 untill 250 than $10,https://weatherstack.com/dashboard,Weather,current -> temperature,
+Screenshot ,Takes screenshot of site you provide url of,http://api.screenshotlayer.com/api/capture,Parameters: access_key =  url = ,0 untill 100 than $20,https://screenshotlayer.com/dashboard,Image,,
+URL shortener,"Given a long URL, returns a short link",https://cleanuri.com/api/v1/shorten,"{
+    ""url"": ""-"",
+}",$0,Don't require,Text,result_url,
+Translator,Convert text from one language to another when you provide query and target,https://translation.googleapis.com/language/translate/v2,"{
+    ""q"":""-"",
+    ""target"":""-"",
+    ""key"":""-"",
+}",as you use,https://console.cloud.google.com/apis/credentials,Text,,
+BlandAi,A tool that connects to any phone number you provide and does your task.,https://api.bland.ai/v2/batches,"Header ""authorization""=""-""
+{
+    ""phone_number"":""555316613"",
+    ""task"":""Distract him by telling a stupid story""
+}","Bland costs $0.09/minute, only for connected calls, billed to the exact second. ",https://app.bland.ai/,Text,,
+Flux Text to image,Flux text-to-image generation model designed to create high-quality images from textual descriptions, https://api.aimlapi.com/images/generations,"Authorization: Bearer a9dbee75ad6e47d880365f4240a05200
+{
+  ""prompt"": 'Hyperrealistic art featuring a cat in costume.',
+  ""model"": 'flux/schnell'
+},
+",1k tokens for $0.0525,https://aimlapi.com/app/keys,Image,images -> url,

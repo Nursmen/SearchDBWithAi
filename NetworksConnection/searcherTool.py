@@ -1,4 +1,5 @@
 from langchain.agents import tool
+from langchain_openai import ChatOpenAI
 
 import weaviate
 from langchain_community.retrievers import (
@@ -9,6 +10,8 @@ import cohere
 
 import os
 import dotenv
+
+import re
 
 dotenv.load_dotenv()
 
@@ -36,6 +39,10 @@ retriever = WeaviateHybridSearchRetriever(
 
 co = cohere.Client(api_key=COHERE_API_KEY)
 
+model = ChatOpenAI(model="gpt-4o", openai_api_key=OPENAI_API_KEY)
+
+prompt = """Which one of the following tools is more likly to be used for a given task? Return it in the same format as the tool-set\n\n"""
+
 @tool
 def tool_searcher(query: str):
     """
@@ -43,10 +50,19 @@ def tool_searcher(query: str):
     """
     firstFilter = [ff.page_content for ff in retriever.invoke(query)]
 
-    results = co.rerank(model="rerank-english-v3.0", query=query, documents=firstFilter, top_n=10, return_documents=True)
+    results = co.rerank(model="rerank-english-v3.0", query=query, documents=firstFilter, top_n=20, return_documents=True)
 
-    return results.results
+    s = ", ".join([o.document.text for o in results.results])
+
+    results = model.invoke(prompt + s + "\n\n" + query)
+
+    tools_needed = re.findall(r'\b[A-Z_]+\b', results.content)[-1]
+
+    results = [ff.page_content for ff in retriever.invoke(tools_needed)]
+
+    return results[0]
 
 if __name__ == "__main__":
-    print(tool_searcher("Checks the availability of specified users in Google Calendar for a given time range"))
-    
+    for i in range(1):
+        print(tool_searcher("Checks the availability of specified users in Google Calendar for a given time range"))
+        
