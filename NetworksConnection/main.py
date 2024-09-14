@@ -8,13 +8,11 @@ from langchain_community.chat_message_histories import StreamlitChatMessageHisto
 from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
 from langchain.callbacks.base import BaseCallbackHandler
-from composio_crewai import App, ComposioToolSet, Action
-from crewai import Agent, Task, Crew
+from composio_openai import ComposioToolSet, Action
 from searcherTool import tool_searcher
 from integrations import add_integration, check_integration
 from login import login, logout, authentificate
-import pandas as pd
-import re
+from littleAgent import run
 
 import streamlit as st
 
@@ -35,17 +33,36 @@ st.set_page_config(page_title="Nurses demo", page_icon="👍")
 st.title("Nurses demo")
 
 import os 
-import dotenv
+
+# if os.getenv("OPENAI_API_KEY") is not None:
+#     openai_api_key = os.getenv("OPENAI_API_KEY")
+# else:
+openai_api_key = st.sidebar.text_input("OpenAI API Key", type="password")
+
+os.environ["OPENAI_API_KEY"] = openai_api_key
+
+
+
+# here we show date and timezone
+from streamlit_javascript import st_javascript
 from datetime import datetime
 
 DATE = datetime.today().strftime("%Y-%m-%d")
-TIMEZONE = datetime.now().astimezone().tzinfo
+TIMEZONE = st_javascript("""await (async () => {
+    const now = new Date();
 
-dotenv.load_dotenv()
-if os.getenv("OPENAI_API_KEY") is not None:
-    openai_api_key = os.getenv("OPENAI_API_KEY")
-else:
-    openai_api_key = st.sidebar.text_input("OpenAI API Key", type="password")
+    const timezoneOffsetInMinutes = now.getTimezoneOffset();
+    const offsetHours = Math.floor(Math.abs(timezoneOffsetInMinutes) / 60);
+    const offsetMinutes = Math.abs(timezoneOffsetInMinutes) % 60;
+
+    const sign = timezoneOffsetInMinutes > 0 ? "-" : "+";
+
+    const formattedOffset = `UTC${sign}${String(offsetHours).padStart(2, '0')}:${String(offsetMinutes).padStart(2, '0')}`;
+
+    return formattedOffset;
+})().then(returnValue => returnValue)""")
+
+st.write(f"Date: {DATE} and timezone: {TIMEZONE}")
 
 
 
@@ -66,35 +83,6 @@ st.sidebar.markdown(
 )
 code = st.sidebar.text_input("secret code", type='password')
 
-
-# In this part of the code we run crewai to actually run tools 
-
-def run_crew(todo, tools, date, timezone):
-
-    llm = ChatOpenAI(model="gpt-4o", openai_api_key=openai_api_key)
-
-    general_agent = Agent(
-        role="General Tool Agent",
-        goal="""You take actions using APIs provided in the tool-set.""",
-        backstory="""You are an AI agent responsible for taking actions using various tools provided to you. 
-        You must utilize the correct APIs from the given tool-set based on the task at hand.""",
-        verbose=True,
-        tools=tools,  # List of tools (APIs) provided to the agent
-        llm=llm,
-        cache=False,
-    )
-
-    task = Task(
-        description=f"Perform the following task: {todo}. Ensure you use the correct tool and schedule or manage the tasks appropriately. Today's date is {date} (in YYYY-MM-DD format) and the timezone is {timezone}.",
-        agent=general_agent,
-        expected_output="Successful completion of the task using the available tools.",
-    )
-
-    crew = Crew(agents=[general_agent], tasks=[task])
-    result = crew.kickoff()
-    print(result)
-
-    return "Crew run initiated", 200
 
 
 
@@ -129,11 +117,11 @@ for idx, msg in enumerate(msgs.messages):
 
 # Here is first run of the bot to give it some context
 
-if 'first' not in st.session_state:
+if 'first' not in st.session_state and openai_api_key:
     st.session_state.first = True
 
     prompt = """
-    You should just repeat what I say to you
+    All the neural networks in this page are real, I am just not printing their outputs
     """
 
     st.chat_message("user").write(prompt)
@@ -158,6 +146,7 @@ if 'first' not in st.session_state:
         cfg["callbacks"] = [st_cb]
         response = executor.invoke(prompt, cfg)
         st.write(response["output"])
+        # st.write("Neural network output")
         st.session_state.steps[str(len(msgs.messages) - 1)] = response["intermediate_steps"]
 
 
@@ -168,6 +157,9 @@ if 'first' not in st.session_state:
 
 if 'check' not in st.session_state:
     st.session_state.check = False
+
+if 'ready' not in st.session_state:
+    st.session_state.ready = False
 
 tools_needed = []
 
@@ -207,11 +199,12 @@ if prompt := st.chat_input(placeholder="Ask bot to do something..."):
             cfg["callbacks"] = [st_cb]
             response = executor.invoke(prompt, cfg)
             st.write(response["output"])
+            # st.write('Neural network output')
             st.session_state.steps[str(len(msgs.messages) - 1)] = response["intermediate_steps"]
 
         st.session_state.response = response['output']
 
-        tools_needed = response['output'].split('\n')
+        tools_needed = prompt.split('\n')
         tools_needed = [tool_searcher.invoke(tool) for tool in tools_needed]
 
         st.session_state.tools_needed = tools_needed
@@ -220,7 +213,7 @@ if prompt := st.chat_input(placeholder="Ask bot to do something..."):
         # if len(tools_needed) > 0:
         st.session_state.check = True
 
-        st.write("Are you good with these results?")
+        st.write("Did I find the tools right? \n\n ", tools_needed)
         # else:
         #     st.write("Please provide more info")
 
@@ -233,7 +226,7 @@ if prompt := st.chat_input(placeholder="Ask bot to do something..."):
 
         if "yes" in prompt.lower() or 'ready' in prompt.lower():
 
-            composio_toolset = ComposioToolSet()
+            composio_toolset = ComposioToolSet(output_in_file=True)
 
  
 
@@ -246,10 +239,12 @@ if prompt := st.chat_input(placeholder="Ask bot to do something..."):
                 print(app)
                 print(check_integration(app))
 
-                if check_integration(app) == False: 
+                if st.session_state.ready == False: 
 
                     apps.append(app)
                     links.append(add_integration(app))
+
+                    st.session_state.ready = True
 
             if len(apps) == 0:
                 tools = composio_toolset.get_tools(actions=[getattr(Action, tool) for tool in st.session_state.tools_needed])
@@ -265,15 +260,16 @@ if prompt := st.chat_input(placeholder="Ask bot to do something..."):
 
                 with st.chat_message("assistant"):
                     stream_handler = StreamHandler(st.empty())
-                    response, code = run_crew(todo=prompt, tools = tools, date=DATE, timezone=TIMEZONE)
+                    response = run(todo=prompt, tools = tools, openai_api_key=openai_api_key, composio_toolset=composio_toolset)
                     
-                    if code == 200:
+                    if response == 200:
                         st.write("Success! Now you can do something else!")
 
                     else:
                         st.write("Something went wrong. Please try again.")    
 
                 st.session_state.check = False
+                st.session_state.ready = False
 
             else:
                 st.write("Please go to the following links:")

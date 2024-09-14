@@ -33,7 +33,7 @@ def add_integration(
     no_browser: bool = False,
     auth_mode: t.Optional[str] = None,
     scopes: t.Optional[t.Tuple[str, ...]] = None,
-    force: bool = False,
+    force: bool = True,
 ) -> None:
     
     entity = context.client.get_entity(id=entity_id)
@@ -207,7 +207,7 @@ def _handle_basic_auth(
 def check_integration(name:str) -> bool:
     context = get_context()
 
-    for app in context.client.connected_accounts.get(active=True):
+    for app in context.client.connected_accounts.get(active=False):
         if app.appUniqueId == name:
             return True
     return False
