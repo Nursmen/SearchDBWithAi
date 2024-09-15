@@ -21,6 +21,10 @@ class Crawl(BaseModel):
 
 @router.post("/crawl/", tags=["tools"])
 async def crawl(crawl: Crawl):
+    """
+    Crawls a website and returns the content of the page and the content of the pages linked on the page
+    """
+
     first = app.scrape_url(crawl.url)
     links = first['linksOnPage']
     contents = []
@@ -45,26 +49,27 @@ class Struct(BaseModel):
     schema: str
     data: Union[str, List[str]]
 
-@router.post("/struct/", tags=["tools"])
+@router.post("/struct_str/", tags=["tools"])
 async def struct(struct: Struct):
-    if isinstance(struct.data, str):
-        return unstructerToStr(struct.schema, struct.data)
-    else:
-
-        call = struct.schema.split(' ')[1][:-1]
-
-        res = [unstructerToStr(struct.schema, d) for d in range(struct.data)]
-
-        for i in range(1, len(res)):
-
-            for entry in res[i]['data']:
-                if call in entry and call in res[0]['data'][0]:
-                    res[0]['data'].append(entry[call])
-                else:
-                    res[0]['data'].append(entry)
-
-        return res[0]
+    return unstructerToStr(struct.schema, struct.data)
     
+@router.post("/struct_array/", tags=["tools"])
+async def struct(struct: Struct):
+
+    call = struct.schema.split(' ')[1][:-1]
+
+    res = [unstructerToStr(struct.schema, d) for d in range(struct.data)]
+
+    for i in range(1, len(res)):
+
+        for entry in res[i]['data']:
+            if call in entry and call in res[0]['data'][0]:
+                res[0]['data'].append(entry[call])
+            else:
+                res[0]['data'].append(entry)
+
+    return res[0]
+
 @router.post("/read/", tags=["tools"])
 async def read(read: UploadFile = File(...)):
     fileType = read.filename.split('.')[-1].lower()

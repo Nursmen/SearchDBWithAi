@@ -1,48 +1,250 @@
-Name,Description,API,Format Output,Cost,Get key,UI type,Response,
-Searcher,Search tool. It provides internet search results,https://api.tavily.com/search,"{
-    ""api_key"": ""tvly-YOUR_API_KEY"",
-    ""query"": ""-"",
-    ""search_depth"": ""basic"",
-    ""include_answer"": false,
-    ""include_images"": true,
-    ""include_raw_content"": false,
-    ""max_results"": 5,
-    ""include_domains"": [],
-    ""exclude_domains"": []
-}",free/100$/220$,https://app.tavily.com/home,Text,,
-Scraper,Scraper automatically extracts data from websites.,https://api.firecrawl.dev,"Header: Authorization: Bearer fc-123456789
-{
-    ""url"": ""-""
-}",$16,https://www.firecrawl.dev/app/api-keys,Text,,
-Crawler,Crawler systematically browses the internet to index and retrieve information from websites,https://api.firecrawl.dev,"Header: Authorization: Bearer fc-123456789
-{
-    ""url"": ""-""
-}",$16,https://www.firecrawl.dev/app/api-keys,Text,,
-Execute code,Code executer run code snippets or entire programs on a remote server,https://api.riza.io/v1/execute,"Header: Authorization: Bearer fc-123456789
-{
-    ""language"": ""-"",
-    ""code"":""-""
-}",self-hosting,https://dashboard.riza.io/,Text,, 
-Image to text,Image to text can analyze an image and generate a detailed textual description of its content.,https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large,Binary: image,$0,https://huggingface.co/settings/tokens,Text,,
-Curracy Converter,Curracy Converter allows you to convert one currency into another,https://api.apilayer.com/fixer/convert,Parameters: to= from= amount=,$0 until 100 than 15$,https://apilayer.com/marketplace/fixer-api#documentation-tab,Text,,
-Weather,Weather lets you get whether in a specific area at a particular time ,http://api.weatherstack.com/current,Parameters: access_key= query=,0 untill 250 than $10,https://weatherstack.com/dashboard,Weather,current -> temperature,
-Screenshot ,Takes screenshot of site you provide url of,http://api.screenshotlayer.com/api/capture,Parameters: access_key =  url = ,0 untill 100 than $20,https://screenshotlayer.com/dashboard,Image,,
-URL shortener,"Given a long URL, returns a short link",https://cleanuri.com/api/v1/shorten,"{
-    ""url"": ""-"",
-}",$0,Don't require,Text,result_url,
-Translator,Convert text from one language to another when you provide query and target,https://translation.googleapis.com/language/translate/v2,"{
-    ""q"":""-"",
-    ""target"":""-"",
-    ""key"":""-"",
-}",as you use,https://console.cloud.google.com/apis/credentials,Text,,
-BlandAi,A tool that connects to any phone number you provide and does your task.,https://api.bland.ai/v2/batches,"Header ""authorization""=""-""
-{
-    ""phone_number"":""555316613"",
-    ""task"":""Distract him by telling a stupid story""
-}","Bland costs $0.09/minute, only for connected calls, billed to the exact second. ",https://app.bland.ai/,Text,,
-Flux Text to image,Flux text-to-image generation model designed to create high-quality images from textual descriptions, https://api.aimlapi.com/images/generations,"Authorization: Bearer a9dbee75ad6e47d880365f4240a05200
-{
-  ""prompt"": 'Hyperrealistic art featuring a cat in costume.',
-  ""model"": 'flux/schnell'
-},
-",1k tokens for $0.0525,https://aimlapi.com/app/keys,Image,images -> url,
+Name,Description,API,Format Output,Cost,Get key,UI type,Response,Method,Need API KEY
+SCRAPE_URL_,Scraper automatically extracts data from websites.,https://api.firecrawl.dev/v1/scrape,"{
+    ""type"": ""object"",
+    ""properties"": {
+        ""url"": {
+            ""type"": ""string"",
+            ""description"": ""The URL to be used.""
+        }
+    },
+    ""required"": [""url""],
+    ""additionalProperties"": False
+}
+",$16,https://www.firecrawl.dev/app/api-keys,Text,,POST,Bearer
+EXCECUTE_CODE_,Code executer run code snippets or entire programs on a remote server,https://api.riza.io/v1/execute,"{
+    ""type"": ""object"",
+    ""properties"": {
+        ""language"": {
+            ""type"": ""string"",
+            ""description"": ""The programming or scripting language used.""
+        },
+        ""code"": {
+            ""type"": ""string"",
+            ""description"": ""The code snippet written in the specified language.""
+        }
+    },
+    ""required"": [""language"", ""code""],
+    ""additionalProperties"": False
+}
+",self-hosting,https://dashboard.riza.io/,Text,,POST,Bearer
+IMAGE_TO_TEXT_,Image to text can analyze an image and generate a detailed textual description of its content.,https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large,"{
+    ""type"": ""object"",
+    ""properties"": {
+        ""image"": {
+            ""type"": ""string"",
+            ""format"": ""binary"",
+            ""description"": ""Binary data representing the image.""
+        }
+    },
+    ""required"": [""image""],
+    ""additionalProperties"": False
+}
+",$0,https://huggingface.co/settings/tokens,Text,,POST,Bearer
+CURRACY_CONVERTER_,Curracy Converter allows you to convert one currency into another,https://api.apilayer.com/fixer/convert,"{
+    ""type"": ""object"",
+    ""properties"": {
+        ""to"": {
+            ""type"": ""string"",
+            ""description"": ""The recipient's identifier.""
+        },
+        ""from"": {
+            ""type"": ""string"",
+            ""description"": ""The sender's identifier.""
+        },
+        ""amount"": {
+            ""type"": ""number"",
+            ""description"": ""The amount to be transferred.""
+        }
+    },
+    ""required"": [""to"", ""from"", ""amount""],
+    ""additionalProperties"": False
+}
+",$0 until 100 than 15$,https://apilayer.com/marketplace/fixer-api#documentation-tab,Text,,GET,No
+WEATHER_,Weather lets you get whether in a specific area at a particular time ,http://api.weatherstack.com/current,"{
+    ""type"": ""object"",
+    ""properties"": {
+        ""access_key"": {
+            ""type"": ""string"",
+            ""description"": ""The access key for authentication.""
+        },
+        ""query"": {
+            ""type"": ""string"",
+            ""description"": ""The search or query string.""
+        }
+    },
+    ""required"": [""access_key"", ""query""],
+    ""additionalProperties"": False
+}
+",0 untill 250 than $10,https://weatherstack.com/dashboard,Weather,current -> temperature,GET,Search
+SCREENSHOT_,Takes screenshot of site you provide url of,http://api.screenshotlayer.com/api/capture,"{
+    ""type"": ""object"",
+    ""properties"": {
+        ""access_key"": {
+            ""type"": ""string"",
+            ""description"": ""The access key for authentication.""
+        },
+        ""url"": {
+            ""type"": ""string"",
+            ""description"": ""The URL to be accessed.""
+        }
+    },
+    ""required"": [""access_key"", ""url""],
+    ""additionalProperties"": False
+}
+",0 untill 100 than $20,https://screenshotlayer.com/dashboard,Image,,GET,Search
+SHORTEN_URL_,"Given a long URL, returns a short link",https://cleanuri.com/api/v1/shorten,"{
+    ""type"": ""object"",
+    ""properties"": {
+        ""url"": {
+            ""type"": ""string"",
+            ""description"": ""The URL to be used.""
+        }
+    },
+    ""required"": [""url""],
+    ""additionalProperties"": False
+}
+",$0,Don't require,Text,result_url,POST,No
+TRANSLATE_,Convert text from one language to another when you provide query and target,https://translation.googleapis.com/language/translate/v2,"{
+    ""type"": ""object"",
+    ""properties"": {
+        ""q"": {
+            ""type"": ""string"",
+            ""description"": ""The query string to search.""
+        },
+        ""target"": {
+            ""type"": ""string"",
+            ""description"": ""The target or destination for the query.""
+        },
+        ""key"": {
+            ""type"": ""string"",
+            ""description"": ""The API key for authentication.""
+        }
+    },
+    ""required"": [""q"", ""target"", ""key""],
+    ""additionalProperties"": False
+}
+",as you use,https://console.cloud.google.com/apis/credentials,Text,,POST,No
+BLAND_AI_BATCH_CALL_WITH_TASK_,Send large volumes of calls at once with follow-up sequences.,https://api.bland.ai/v2/batches,"{
+  ""type"": ""object"",
+  ""properties"": {
+    ""phone_numbers"": {
+      ""type"": ""array"",
+      ""items"": {
+        ""type"": ""string""
+      },
+      ""description"": ""A list of phone numbers to contact.""
+    },
+    ""task"": {
+      ""type"": ""string"",
+      ""description"": ""The task to perform, such as distracting with a story.""
+    }
+  },
+  ""required"": [""phone_numbers"", ""task""],
+  ""additionalProperties"": False
+}
+","Bland costs $0.09/minute, only for connected calls, billed to the exact second. ",https://app.bland.ai/,Text,,POST,Header
+BLAND_AI_CALL_WITH_TASK_,Send an AI phone call with a custom objective and actions.,https://api.bland.ai/v1/calls,"{
+    ""type"": ""object"",
+    ""properties"": {
+        ""phone_number"": {
+            ""type"": ""string"",
+            ""description"": ""The phone number to contact.""
+        },
+        ""task"": {
+            ""type"": ""string"",
+            ""description"": ""The task to perform, such as distracting with a story.""
+        }
+    },
+    ""required"": [""phone_number"", ""task""],
+    ""additionalProperties"": False
+}
+","Bland costs $0.09/minute, only for connected calls, billed to the exact second. ",https://app.bland.ai/,Text,,POST,Header
+FLUX_TEXT_TO_IMAGE_,Flux text-to-image generation model designed to create high-quality images from textual descriptions, https://api.aimlapi.com/images/generations,"{
+    ""type"": ""object"",
+    ""properties"": {
+        ""prompt"": {
+            ""type"": ""string"",
+            ""description"": ""The description for the art generation prompt.""
+        },
+        ""model"": {
+            ""type"": ""string"",
+            ""description"": ""Just write in here 'flux/schnell' "",
+            ""default"": 7
+        }
+    },
+    ""required"": [""prompt"", ""model""],
+    ""additionalProperties"": False
+}",1k tokens for $0.0525,https://aimlapi.com/app/keys,Image,images -> url,POST,Bearer
+СRAWL_URL_,Crawls a website and returns the content of the page and the content of the pages linked on the page,https://self.com/tools/crawl,"{
+ ""type"": ""object"", 
+""properties"": 
+{ ""url"": 
+{ ""type"": ""string"", 
+""description"": ""The URL to be used."" 
+}, 
+""limit"": 
+{ ""type"": ""integer"", 
+""description"": ""An optional limit parameter, 
+defaulting to 7."", ""default"": 7 }
+ }, ""required"": [""url""],
+ ""additionalProperties"": False }",16$,https://www.firecrawl.dev/app/api-keys,Text,,POST,Bearer
+MAP_UR:_,Get all the links on the page,https://self.com/tools/map,"{
+    ""type"": ""object"",
+    ""properties"": {
+        ""url"": {
+            ""type"": ""string"",
+            ""description"": ""The URL to be used.""
+        }
+    },
+    ""required"": [""url""],
+    ""additionalProperties"": False
+}
+",16$,https://www.firecrawl.dev/app/api-keys,Text,,POST,Bearer
+UNSTRUCTURE_TO_STRUCTURE_,Convert unstructured data to structured data based on the given schema.,https://self.com/tools/struct_str,"{
+    ""type"": ""object"",
+    ""properties"": {
+        ""schema"": {
+            ""type"": ""string"",
+            ""description"": ""The schema identifier to be used.""
+        },
+        ""data"": {
+            ""type"": ""string"",
+            ""description"": ""The string data value.""
+        }
+    },
+    ""required"": [""schema"", ""data""],
+    ""additionalProperties"": False
+}
+",0,None,Text,,POST,No
+UNSTRUCTURE_TO_STRUCTURE_ARRAY_,Convert unstructured data to structured data based on the given schema.,https://self.com/tools/struct_array,"{
+    ""type"": ""object"",
+    ""properties"": {
+        ""schema"": {
+            ""type"": ""string"",
+            ""description"": ""The schema identifier to be used.""
+        },
+        ""data"": {
+            ""type"": ""array"",
+            ""items"": {
+                ""type"": ""string""
+            },
+            ""description"": ""A list of string data values.""
+        }
+    },
+    ""required"": [""schema"", ""data""],
+    ""additionalProperties"": False
+}
+",0,None,Text,,POST,No
+READ_FILE_,Reads any file you provide. Returns content as a string,https://self.com/tools/read,"{
+    ""type"": ""object"",
+    ""properties"": {
+        ""image"": {
+            ""type"": ""string"",
+            ""format"": ""binary"",
+            ""description"": ""Binary data representing the image.""
+        }
+    },
+    ""required"": [""image""],
+    ""additionalProperties"": False
+}
+",0,None,Text,,POST,No
