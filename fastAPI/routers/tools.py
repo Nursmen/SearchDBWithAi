@@ -6,6 +6,8 @@ from typing import Union, List, Optional
 
 from .unstrToStr import unstructerToStr
 from .read_file import read_pdf, read_csv, read_txt, read_html, read_excel, read_json, read_xml, read_docx, read_pptx, read_markdown
+from .codeInterpreter import code_interpret, upload_file_for_code_interpreter
+from .rag import rag
 
 from firecrawl import FirecrawlApp
 
@@ -15,9 +17,25 @@ dotenv.load_dotenv()
 app = FirecrawlApp(api_key=os.getenv('FIRECRAWL_API_KEY'))
 
 
+class Struct(BaseModel):
+    schema: str
+    data: Union[str, List[str]]
+
 class Crawl(BaseModel):
     url: str
     limit: Optional[int] = 7
+
+class Map(BaseModel):
+    url: str
+
+class Code(BaseModel):
+    code: str
+
+class UserFile(BaseModel):
+    file_url: str
+
+class RAG(BaseModel):
+    docs: List[str]
 
 @router.post("/crawl/", tags=["tools"])
 async def crawl(crawl: Crawl):
@@ -38,21 +56,14 @@ async def crawl(crawl: Crawl):
             continue
     return contents
 
-class Map(BaseModel):
-    url: str
-
 @router.post("/map/", tags=["tools"])
 async def map(map: Map):
     return app.scrape_url(map.url)['linksOnPage']
 
-class Struct(BaseModel):
-    schema: str
-    data: Union[str, List[str]]
-
 @router.post("/struct_str/", tags=["tools"])
 async def struct(struct: Struct):
     return unstructerToStr(struct.schema, struct.data)
-    
+
 @router.post("/struct_array/", tags=["tools"])
 async def struct(struct: Struct):
 
@@ -104,8 +115,19 @@ async def read(read: UploadFile = File(...)):
         else:
             raise HTTPException(status_code=400, detail="Unsupported read type")
     finally:
-        # Optionally, delete the read after processing
         import os
         os.remove(file_path)
     
     return {"filename": read.filename, "content": content}
+
+@router.post("/code/", tags=["tools"])
+async def code(code: Code):
+    return code_interpret(code.code)
+
+@router.post("/file_code/", tags=["tools"])
+async def file(file: UserFile):
+    return upload_file_for_code_interpreter(file.file_url)
+
+@router.post("/rag/", tags=["tools"])
+async def rag(rag: RAG):
+    return rag(rag.docs)

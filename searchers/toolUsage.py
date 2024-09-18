@@ -119,6 +119,9 @@ def useTool(tool_name:str, query:str, openai_api_key:str, tool_api_key:Optional[
                 elif need_api_key == 'header':
                     headers = {'authorization': f'{tool_api_key}'}
                     api_response = requests.post(api_endpoint, json=arguments, headers=headers)
+                elif need_api_key == 'json':
+                    arguments['api_key'] = tool_api_key
+                    api_response = requests.post(api_endpoint, json=arguments)
                 else:
                     print("Method not supported")
                     return 400
