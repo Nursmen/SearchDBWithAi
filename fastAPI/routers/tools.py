@@ -32,7 +32,7 @@ class Code(BaseModel):
     code: str
 
 class UserFile(BaseModel):
-    file_url: str
+    file: UploadFile
 
 class RAG(BaseModel):
     docs: List[str]
@@ -82,43 +82,36 @@ async def struct(struct: Struct):
     return res[0]
 
 @router.post("/read/", tags=["tools"])
-async def read(read: UploadFile = File(...)):
-    fileType = read.filename.split('.')[-1].lower()
+async def read(file: UploadFile = File(...)):
+    fileType = file.filename.split('.')[-1].lower()
 
-    file_path = f"./{read.filename}"
-    with open(file_path, "wb") as f:
-        f.write(await read.read())
+    file_content = await file.read()
+
+    file_readers = {
+        'pdf': read_pdf,
+        'csv': read_csv,
+        'txt': read_txt,
+        'html': read_html,
+        'excel': read_excel,
+        'json': read_json,
+        'xml': read_xml,
+        'docx': read_docx,
+        'pptx': read_pptx,
+        'md': read_markdown,
+        'xlsx': read_excel
+    }
 
     try:
-        if fileType == 'pdf':
-            content = read_pdf(file_path)
-        elif fileType == 'csv':
-            content = read_csv(file_path)
-        elif fileType == 'txt':
-            content = read_txt(file_path)
-        elif fileType == 'html':
-            content = read_html(file_path)
-        elif fileType == 'excel':
-            content = read_excel(file_path)
-        elif fileType == 'json':
-            content = read_json(file_path)
-        elif fileType == 'xml':
-            content = read_xml(file_path)
-        elif fileType == 'docx':
-            content = read_docx(file_path)
-        elif fileType == 'pptx':
-            content = read_pptx(file_path)
-        elif fileType == 'md':
-            content = read_markdown(file_path)
-        elif fileType == 'xlsx':
-            content = read_excel(file_path)
+        reader = file_readers.get(fileType)
+        if reader:
+            content = reader(file_content)
         else:
-            raise HTTPException(status_code=400, detail="Unsupported read type")
+            raise HTTPException(status_code=400, detail="Unsupported file type")
     finally:
-        import os
-        os.remove(file_path)
+        pass
     
-    return {"filename": read.filename, "content": content}
+    return {"filename": file.filename, "content": content}
+
 
 @router.post("/code/", tags=["tools"])
 async def code(code: Code):

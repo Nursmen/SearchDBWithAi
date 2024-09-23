@@ -26,9 +26,8 @@ def read_excel(file_path):
     df = pd.read_excel(file_path)
     return df.to_string(index=False)
 
-def read_json(file_path):
-    with open(file_path, 'r', encoding='utf-8') as file:
-        return json.dumps(json.load(file), indent=4)
+def read_json(file_content):
+    return json.dumps(json.loads(file_content.decode('utf-8')), indent=4)
 
 def read_xml(file_path):
     tree = ET.parse(file_path)
@@ -56,3 +55,8 @@ def read_html(file_path):
 def read_markdown(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         return file.read()
+
+if __name__ == "__main__":
+    with open("./addresses.csv", "rb") as f:
+        print(read_csv(f))
+        print(f.filename)

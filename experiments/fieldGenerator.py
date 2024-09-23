@@ -47,15 +47,12 @@ def extract_fields_from_query(query: str) -> Dict[str, Any]:
     )
     
     fields_response = response.choices[0].message.content
-    # The fields should now be extracted as a Python dictionary.
-    fields = json.loads(fields_response)  # Be cautious of eval, validate input first.
+    fields = json.loads(fields_response)
     return fields, fields_response
 
 def generate_pydantic_model(query: str) -> BaseModel:
-    # Step 1: Extract fields from the query using ChatGPT
     fields, fields_response = extract_fields_from_query(query)
     
-    # Step 2: Dynamically create a Pydantic model using the fields
     schema = create_model(
         'DynamicSchema',
         **{field_name: (field_type, ...) for field_name, field_type in fields.items()}
@@ -84,7 +81,6 @@ if __name__ == "__main__":
     query = "Create a Pydantic model for a user profile with fields: 'name', 'age', 'email', 'is_active', 'address', 'phone_number', and 'orders' which is a list of order IDs."
     model, generated_json = generate_pydantic_model(query)
     print(model)    
-    # check the fields of the model
     print(model.model_fields)
     print(generated_json)
 
