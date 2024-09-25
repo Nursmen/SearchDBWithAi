@@ -23,6 +23,20 @@ TIMEZONE = st_javascript("""await (async () => {
 })().then(returnValue => returnValue)""")
 
 
+
+def get_composio_part(response, composio_toolset):
+    tool_result = []
+
+    calls = []
+    for call in response.choices[0].message.tool_calls:
+        if call.function.name[-1] == '_':
+            continue
+        calls.append(call)
+    response.choices[0].message.tool_calls = calls
+    tool_result.append(composio_toolset.handle_tool_calls(response))
+
+    return tool_result
+
 def run(todo: str, tools: dict, openai_api_key: str, composio_toolset: ComposioToolSet, api_keys: dict) -> tuple[int, str]:
     
     openai_client = OpenAI(api_key=openai_api_key)
@@ -39,11 +53,10 @@ def run(todo: str, tools: dict, openai_api_key: str, composio_toolset: ComposioT
                     {"role": "user", "content": todo},
                 ],
             )
+            tool_result = get_composio_part(response, composio_toolset)
 
-            tool_result = composio_toolset.handle_tool_calls(response)
 
-
-        for tool in tool_result:
+        for tool in tool_result[0]:
             if tool['file'] is not None:
                 with open(tool['file'], 'rb') as file:
                     file_content = file.read()
@@ -53,23 +66,28 @@ def run(todo: str, tools: dict, openai_api_key: str, composio_toolset: ComposioT
                     tool['file'] = None
 
         for tool in tools['mine']:
-            tool_result.ap pend(useTool(tool, todo, openai_api_key, api_keys[tool]))
+            api_key = api_keys.get(tool, None)
+            tool_result.append(useTool(tool, todo, openai_api_key, api_key))
 
         print(tool_result)
 
         response = openai_client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": f"You are an AI assistant. Use the following tool result to answer the user's request. Today's date is {DATE} and the timezone is {TIMEZONE}."},
                 {"role": "user", "content": f"Tool result: {tool_result}\n\nUser request: {todo}"},
             ],
+            tools=tools['composio'],
         )
 
-        # Extract the model's answer
+        if response.choices[0].message.tool_calls:
+            tool_result = get_composio_part(response, composio_toolset)
+            print(tool_result)
+            return 200, "Success"
+        
         answer = response.choices[0].message.content
         print(answer)
 
-        # Return the answer
         return 200, answer
     except Exception as e:
         return 400, f'error: {e}'
